@@ -1,0 +1,41 @@
+=head1 Field
+
+Field provides an object oriented interface to L<Record> fields. Field is an abstract superclass.
+
+  use Field;
+
+=over 4
+
+=item Field->add_subclass_by_name( $type )
+
+Register concrete subclasses by type.
+
+  Field::Text->add_subclass_by_name( 'text' );
+
+=item Field->get_subclass_by_name( $type ) : $package
+
+This is primarily an interface for L<Record>'s implementation of the 'get' method.
+
+=back
+
+Sequence
+  POD::Heading - level => 1
+    Literal - "Field"
+  POD::Paragraph
+    Literal - "Field provides an object oriented interface to "
+    Link - Record
+    Literal - fields. Field is an abstract superclass.
+  POD::LitPara - "  use Field;\n"
+  POD::List
+    POD::Item
+      Literal - "Field->add_subclass_by_name( $type )"
+    POD::Paragraph 
+      Literal - "Register concrete subclasses by type."
+    POD::LitPara - "  Field::Text->add_subclass_by_name( 'text' );\n"
+    
+    POD::Item 
+      Literal - "Field->get_subclass_by_name( $type ) : $package"
+    POD::Paragraph
+      Literal - "This is primarily an interface for "
+      Link - Record
+      Literal - "'s implementation of the 'get' method."

@@ -1,0 +1,16 @@
+
+=item Get the Evo Perl Libraries
+
+Fetch the individual libraries from CPAN or evoscript.com, or choose from these bundles from evoscript.com:
+- CGI starter kit
+- Full WebApp and Script
+- WebApp, Script, and DBO
+- ...
+
+=item Install and configure a webapp executable.
+
+Choose from these modes of execution:
+- CGI
+- FCGI
+- HTTP Server
+

@@ -1,0 +1,438 @@
+=head1 Introduction
+
+EvoDoc - EvoScript v4.00b1 - Tuesday May 19th, 1998
+
+This document contains the basic information necessary to install the EvoScript web application framework and start writing EvoScript pages. 
+
+In order to install EvoScript, you'll need a web server and a recent version of Perl; for this walk-through, you'll also need a web browser and a text editor. You may also find that some knowlege of Perl is helpful in writing more complex web applications with this release of EvoScript. You may wish to print out this document and read  through it while working through the examples. 
+
+The example pathnames used in the rest of the document are specific to my installation of EvoScript (at /opt/evoscript) and my use of it for my home page (~/html_public), so extrapolate to your own ends.
+
+If you have additional questions, there's an EvoScript users' mailing list where help can be found. To subscribe, send mail to:
+
+    majordomo@evoscript.org
+
+with the phrase "subscribe evoscript-users" in the body of the message.
+
+=head1 Contents
+
+=over 4
+
+=item Chapter 1 - Initial Set-Up  
+
+Download, installation and configuration of the EvoScript libraries.
+
+=item Chapter 2 - Site Configuration  
+
+Configuration and testing of the EvoScript executable.
+
+=item Chapter 3 - Hello World  
+
+A step by step tutorial explaining the basics of EvoScript's scripted pages.
+
+=item Chapter 4 - Data References  
+
+A detailed explination of the underlying global data structures and drefs (Data REFerences), the script-level interface to values it contains.
+
+=back
+
+=head1 Chapter 1 - Initial Set-Up
+
+=head2 Prerequisites  
+
+=over 4
+
+=item Perl 5.003 (or higher)
+
+Available at http://www.perl.com
+
+=item CGI compliant web server
+
+If you don't already have one installed, we recommend Apache, available at http://www.apache.org
+
+=item Unix or Windows NT Server
+
+Many of the examples in this document are Unix specific, but this version of EvoScript has been used sucessfully with WinNT with minor configuration changes.
+
+=back
+
+=head2 Download and Uncompress
+
+The most recent version of EvoScript is available for free download via the web and annonymous ftp:
+
+    http://www.evoscript.org/download
+    ftp://ftp.evoscript.org/pub
+
+After downloading, uncompress and unarchive the file into /tmp. 
+
+    gunzip EvoScript-4.00b1.tar.gz
+    tar xvf EvoScript-4.00b1.tar /tmp
+
+Decide where you'd like to put your EvoScript installation. I've got mine at C</opt>, but that's not really important, as long as people can find it.
+
+    mv /tmp/evoscript /opt
+
+=head2 Configure Shebang! Line
+
+Locate EvoScript.cgi in the directory you unpacked above. The first line of this file specifies the path name of the perl executable to use. The default is:
+
+    #!/usr/local/bin/perl
+
+If your installation of perl is at some other location, change this line to use the correct path. (Alternately, you may wish to create a symlink from this path to the primary path of your Perl executable.)
+
+=head2 Configure Library Path
+
+Locate the "Configuration variables" section of EvoScript.cgi:
+
+    ### Configuration Variables ###
+    
+    # Resource Directory Path
+    my $Resource_Path = "";
+	  
+    # Library Directory Path
+    use libs '/opt/evoscript/lib';
+    
+    ###############################
+
+Modify the pathname following the "use libs" declaration to point to your installation of the `evoscript/lib' directory. For example, if you installed the EvoScript package into /home/foo/evoscript, you should change this line to:
+
+    # Library Directory Path
+    use libs '/home/foo/evoscript/lib';
+
+=head1 Chapter 2 - Site Configuration
+
+=head2 CGI Script Installation
+
+Next, decide where in your web documents tree you will place the EvoScript executable. For example, the document root for my personal home page is `~/html_public/'.
+
+    cp /opt/evoscript/EvoScript.cgi ~/html_public/
+
+Ensure that the CGI script is is executable by the web server. My web server is a member of the `web' group.
+  
+    cd ~/html_public
+    chgrp web EvoScript.cgi
+    chmod g+x EvoScript.cgi
+
+In order for the web server to execute the script, you may have to place it in a special "cgi-bin" directory or specify some additional configuration parameters. For example, if you're using Apache and you've chosen to install the executable in a subdirectory of your web tree named "foo", you can specify that requests of the form http://.../foo/EvoScript.cgi should allow execution by adding the following lines to your server configuration file:
+
+    <Location /foo>
+    Options ExecCGI
+    </Location>
+
+=head2 Resources
+
+The EvoScript executable uses a number of user-created resource files such as scripted pages, database table definitions and site configuration files. For security purposes, these files should not be directly accessible to end-users. EvoScript checks a specified resource directory for these files when requests are made. 
+
+Make a new directory to hold the resource files for your site. My resources directory is in my home directory; you can put yours wherever you like, as long as it and the files within it are readable by the EvoScript process started by your web server.
+
+    mkdir resources
+    chgrp web resources
+    chmod g+r resources
+    chmod g+x resources
+
+EvoScript.cgi locates the resources directory by checking the configuration variable C<$Resource_Path>. To set this variable, edit the appropriate line in EvoScript.cgi near the top, under the heading `Configuration Variables'. In the example below, I've set it to a directory called resources in my home directory.
+
+    ### Configuration Variables ###
+    
+    # Resource Directory Path
+    my $Resource_Path = '/files/home/jeremy/resources';
+    
+    ...
+
+Make sure the value for the C<$Resource_Path> is an absolute path, or a relative path starting from the location of the executable.
+
+=head2 Confirmation
+
+To begin testing your installation, copy C<test.page> from C<examples/> in your EvoScript distribution to your resources directory. For my resources directory:
+
+    cp /opt/evoscript/examples/test.page ~/resources
+    chgrp web test.page
+    chmog g+r test.page
+
+Now you should have EvoScript and a test resource installed. It's time to request the resource via your web server and see if it works. Form your URL to request EvoScript.cgi followed by a slash and the name of the resource that you want, in this case "test.page". For my home page the proper URL is:
+
+    http://www.evolution.com/~jeremy/EvoScript.cgi/test.page
+
+The returned HTML should have a big heading reporting "It Works!" and then some values describing the request that was received. If it doesn't work, go over the troubleshooting tips below. If it still doesn't work, join the EvoScript Users list and start asking questions, or check for additional documentation at:
+
+    http://www.evoscript.org/
+
+=head2 Troubleshooting:
+
+If you get an error message or the executable doesn't run, double-check the following items for the source of the problem:
+
+=over 4
+
+=item Badly formed URL
+
+Request the executable, appended by a slash and the name of the resource that you're requesting (in this case C<test.page>).
+
+=item Permissions:
+
+=over 4
+
+=item Web Directory
+
+must be readable executable by the web server
+
+=over 4
+
+=item EvoScript.cgi
+
+must be executable by the web server
+
+=back
+
+=item Resources Directory
+
+must be readable and executable by the web server
+
+=over 4
+
+=item test.page
+
+must be readable by the web server
+
+=back
+
+=back
+
+=item Version of Perl
+
+Perl version 5.003 or higher is required. 
+
+=item Shebang line, Library and Resource Paths
+
+Must be set correctly in EvoScript.cgi
+
+=item Web Server Configuration
+
+Has to be able to run CGI programs. Read your web server's documentation to confirm that it supports this function and to determine what configuration is necessary to enable it.
+
+=item Web Server Error Log
+
+If the above items appear correct, but your request still fails, check your web server's error log. In addition to any error messages written there by the web server, it may contain additional debugging information from the EvoScript executable.
+
+=back
+
+=head1 Chapter 3 - A "Hello World" Tutorial
+
+EvoScript pages can contain a both EvoScript and HTML tags, freely 
+intermixed. When a user requests that page, the embedded EvoScript tags are 
+interpreted by the CGI script to produce additional HTML or provide other 
+functionality. 
+
+=head2 HTML Tags -- A Quick Review
+
+Hopefully you're familiar with the two styles of HTML tags: The 
+stand-alone,
+
+    <img src="bar.jpg">
+
+and the container,
+
+    <a href="http://foo.com/bar.html"> ... </a>
+
+Each tag opens with a less-than symbol, C<E<lt>>, which is immediately followed by the name of the tag, C<img> in the above example, and then a list of zero or more arguments, separated by whitespace. Most arguments are in the form of key/value pairs, separated by an equal sign, with the value portion usually in double quotes. Each tag closes with a greater-than symbol, C<E<gt>>. Stand-alone tags are entities unto themselves, whereas container tags have two parts that wrap, or contain other tags or text.
+
+    <b>kumquat</b>
+
+In the above line of HTML the word C<kumquat> is contained in a bold tag, and will be rendered in a bold font when displayed by a browser.
+
+=head2 EvoScript Tags
+
+EvoScript tags are composed much tha same way as HTML tags; the most obvious distinction is the use of square brackets, C<[> and C<]>, as tag delimiters. The more important conceptual distinction is that EvoScript tags are interpreted server side while HTML is passed along as is to the client. (There is also a facility for parsing HTML and adding server-side dynamic behaviour, but it's turned off by default and not currently documented.) For example, one of the most basic EvoScript is C<[print]>, which can be used as below:
+
+    [print value="hello world"]
+
+When the page is interpreted the above print tag will be replaved with the value:
+
+    hello world
+
+This is not very exciting -- the tag doesn't particularly acomplish anything useful. However, consider the follwoing example:
+
+    [print value="Foo > Bar" escape="html"]
+
+The interpreted result would be:
+
+    Foo &gt; Bar
+
+Where C<&gt;> is the HTML escaped version of the C<E<gt>> character. C<[print]> is one of many tags and C<value> and C<escape> are two of several possible arguments for it. 
+
+Hopefully you have a sense of what's going on at this point. Now it's time
+to write your "Hello World" script.
+
+=head2 Your First Resource: hello.page
+
+Create a new file in your resources directory called C<hello.page>. Make sure it's readable by the web server. If you want to, you can modify the C<hello> portion of the file name, but make sure to retain the C<.page> file extention so EvoScript knows that a scripted page resource is being requested.  Write the following to that file: 
+
+    <html>
+      <head><title>Hello World</title></head>
+      <body>
+        [print value="hello world"]
+      </body>
+    </html>
+
+To check your first script, request the page through your web browser. Follow the URL to the EvoScript executable with a slash C</> and the name of the resource that you are requesting (in this case C<hello.page>). This tells EvoScript to look in it's resources directory for a file of the same name. My URL looks like this:  
+
+    http://www.evolution.com/~jeremy/EvoScript.cgi/hello.page
+
+You should get an HTML page back with the words "hello world" on it. If not, check the troubleshooting tips from Section 2. 
+
+At this point you're probably begining to imagine how dynamic content could actualy be generated with EvoScript. That's good -- keep reading.
+
+=head2 DRefs
+
+Now that you've seen some tags in action, it's time to move on to EvoScript's variables, called drefs (short for Data Reference). DRefs are preceded with the C<#> symbol on scripted pages to distinguish them from other values. For example, C<[print]>'s value argument can accept a dref instead of a double-quoted string.
+
+    [print value=#foo]
+
+The above tag will print the value refered to by the dref C<foo>. 
+To provide an initial value for a dref, use the C<[set]...[/set]> tag.
+In it's most common form, the contents of the set tag are copied into 
+the dref specified by the C<target> argument.
+
+    [set target=#foo]hello world[/set]
+
+The above tag sets the dref C<foo> to the value C<hello world>. Try it on your C<hello.page>:
+
+    <html>
+      <head><title>Hello World</title></head>
+      <body>
+	[set target=#greeting]hello world[/set]
+	[print value=#greeting]
+      </body>
+    </html>
+
+In much the same way that a pathname can refer to either a file or a directory, a dref can refer to either a simple value like C<hello world>, an array of values like C<Joe>, C<Bob>, C<Sal>, or a hash of key-value pairs like C<first: John>, C<middle: P.>, C<last: Doe>. (Those of you familiar with Perl will recognize its three main data types: scalar, array, and hash.) The C<.> character is used to denote hierachical containment within drefs, much like the C</> in a file path (except that drefs never begin with C<.>). You'll probably want some examples at this point to see just what we mean.
+
+=head2 Lists
+
+In the below example I use the C<wordsof> flag in the set tag to indicate that the contents re to be interpreted as a white space delimited list. The dref C<alist> is set to a list of the values C<foo>, C<bar> and C<baz>. To access an individual element in the list, the dref of the list is followed by the offset of the desired item. list offsets are zero based in EvoScript, so the dref C<alist.0> refers to the first item in the C<alist> list. 
+
+    <html>
+      <head><title>Learning About Lists</title></head>
+      <body>
+	[set target=#alist wordsof] foo bar baz [/set]
+	[print value=#alist.0]
+      </body>
+    </html>
+
+Interpreting the above EvoScript page returns an HTML page with the word "foo" as it's content. Printing the dref C<alist.1> or C<alist.2> would display one of the next two items in the list. List offsets beyond the number of defined elements, such as C<alist.3> in this example, return the undefined value, which
+does not print.
+
+The C<[foreach]> tag is a container tag that evaluates it's conents repeatedly for each item in a list or hash, specified by the C<target> attribute. During each iteration, the current value in the list is available in the dref C<#loop.value>. In the below example, the HTML returned would the words "foo", "bar", and "baz" each on their own lines, coutesy of the HTML C<E<lt>brE<gt>> tag that is appended to each of them.
+
+    <html>
+      <head><title>Learning About Lists</title></head>
+      <body>
+        [set target=#alist wordsof] foo bar baz [/set]
+        [foreach target=#alist]
+          [print value=#loop.value]<br>
+        [/foreach]
+      </body>
+    </html>
+
+A more efficient way to express the same thing would be to set the C<join> attribute of the foreach tag to C<E<lt>brE<gt>>.
+
+    [foreach target=#alist join="<br>"][print value=#loop.value][/foreach]
+
+=head2 Hashes
+
+C<[foreach]> also works with hashes. In the following example several values are set for the hash refered to by the dref C<larry>. By default, 
+the foreach tag iterates over key/value pairs in a hash in an
+unpredictable order; we'll set the sort attribute to the string C<key> 
+to sort the keys alpabetically..
+
+    <html>
+      <head><title>Learning About Hashes</title></head>
+      <body>
+        [set target=#larry.height]tall[/set]
+        [set target=#larry.weight]skinny[/set]
+        [set target=#larry.moustache]silly[/set]
+        <h1>Larry:</h1>
+        [foreach target=#larry sort="key"]
+          <b>[print value=#loop.key]</b> = [print value=#loop.value]<br>
+        [/foreach]
+      </body>
+    </html>
+
+The reseulting HTML from the above EvoScript page should look something like the following:
+
+    <html>
+      <head><title>Learning About Hashes</title></head>
+      <body>
+  
+  
+      <h1>Larry:</h1>
+  
+	<b>height</b> = tall<br>
+  
+	<b>moustache</b> = silly<br>
+  
+	<b>weight</b> = skinny<br>
+  
+      </body>
+    </html>
+
+The extra whitespace is there because when the EvoScript tags are interpreted, the non-EvoScript literals (things that aren't an EvoScript tag) are left alone, including newline characters.
+
+The underlying Perl source for all of the tags can be found in the C<lib/Script/Tags> diectory of your EvoScript installation. POD documentation is attached to each of the libaries.
+
+=head1 Chapter 4 - DRef Internals
+
+=head2 The DRef $Root
+
+C<$Root> is the global datastructure that contains the values for all top-level drefs. Drefs are looked up with the C<Data::DRef::getData()> function, which invokes the C<Data::DRef::get()> function starting at $Root. C<get()> accepts a Perl reference and a dref as arguments, and repeatedly extracts a C<.>-delimited string from the dref and makes a navigation decision based on the underlying data type of the reference passed to it: if the reference is to a hash, the the dref is used to look up a key of that hash. If the reference is to a list, the dref is treated as an index for the list. If the reference is to an object, it can override the default behaviour by providing a C<get()> method of it's own.
+
+=head2 Top Level Drefs
+
+Certain drefs are always used to refer to automatically created server objects. For example the C<#request> dref is is a nested datastructure containing a variety of information about the current request. (For a full list of keys and values look at the POD documentation attached to C<lib/WebApp/Request/CGI.pm>.) Some of the more interesting ones are:
+
+=over 4
+
+=item request.args
+
+A hash of arguments received from the client. For example, a query string of:
+
+    user=jsmith&date=19980315&command=View
+
+would result in a request args hash equivalent to the following:
+
+    'user' => 'jsmith',
+    'date' => 19980315,
+    'command' => 'View'
+
+If multiple arguments with the same name are received from the client, an array is formed of each of those values. Dot characters in argument names are used to construct nested hashes. (See C<WebApp::Request-E<gt>add_argument> for details.)
+
+=item request.response_headers
+
+A hash of HTTP headers to include in the response message. Defaults to:
+
+    'content-type' => 'text/html',
+    'pragma' => 'no-cache'
+
+=item request.user.login
+
+The login name authenticated by the web server.
+
+=back
+
+The dref C<#server> refers to the currently active EvoScript web engine. The most common use of this for drefs is:
+
+=over 4
+
+=item server.timestamp
+
+The current time (distinct from the time the request was received, stored in C<#request.timestamp>).
+
+=back
+
+More top-level drefs will be used in future versions to support new 
+features. To avoid conflict with such additions, used initial capitals or mixed case when naming your drefs. All special top-level EvoScript drefs, present and planned, are stricly lower case
+
+=head1 Copyright
+
+(c) 1998 Evolution Online Systems
+First Edition: June 6th, 1998
+Jeremy G. Bishop <jeremy@evolution.com>

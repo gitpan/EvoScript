@@ -1,0 +1,340 @@
+=head1 ForEach
+
+Iterates over a series of items, evaluating its contents for each one.
+
+    [forach target=#request.path.names]
+      [print value=#loop.value]
+    [/forach]
+
+The target can be a reference to a hash or array, or a string to be used with the count or wordsof arguments. 
+
+During each iteration, the key and value for this pass are exposed in the DRefs #loop.key and #loop.value. Within a nested loop you can use the loop's 'outer' attribute to refer to the enclosing loop; for example, you could write #loop.outer.outer.key to refer to the current key in the outermost of three nested loops. 
+
+=over 4
+
+=item target
+
+The source of the items to iterate over. Use '#' for DRefs. Required argument. 
+
+=item count
+
+Optional flag. Iterate from 1 to the numeric value of target.
+
+    [forach count target=5][print value=#loop.value][/forach]
+
+=item wordsof
+
+Optional flag. Iterate over the space-separated words of the target.
+
+    [forach wordsof target="One Two Three"][print value=#loop.value][/forach]
+
+=item leafnodes
+
+Optional flag. Iterate over the non-referential leaf nodes of a nested structure at target, using Data::Collection's scalarkeysof() function. 
+
+=item sort
+
+Optional. A DRef by which to sort the keys, or the value 'key' to sort by the keys themselves. 
+
+=item skip
+
+Optional. A regular expression for keys which should be skipped. 
+
+=item join
+
+Optional. A string to be interposed between each repetition of the loop. 
+
+=item periodicjoin
+
+Optional. Set this to a number followed by a space and some text; between every number-th repetitions this text will be inserted. When this occurs, the join argument is I<not> used.
+
+=back
+
+=head1 Grid
+
+Iterates over a series of items, evaluating its contents for each one, and placing each one in a cell of an HTML table.
+
+    [grid values="One Two Three" numcols=2 direction=across]
+      [print value=#loop.value]
+    [/grid]
+
+During each iteration, the value for this pass, along with the row and col position, are exposed in the DRefs #loop.value, #loop.row, and #loop.col. Within a nested loop you can use the loop's 'outer' attribute to refer to the enclosing loop. 
+
+=over 4
+
+=item values
+
+A list of items to iterate over. Use '#' for DRefs. Required argument. 
+
+=item numcols
+
+The number of columns to use in the table. Use '#' for DRefs. Required argument. 
+
+=item direction
+
+The order in which to fill the table, either across or down. Defaults to down. Use '#' for DRefs. 
+
+=item sortorder
+
+Optional. A list of keys to sort the values by. Use '#' for DRefs. 
+
+=item border
+
+Optional. The border size for the table. Defaults to 0. Use '#' for DRefs. 
+
+=item width
+
+Optional. The overall width in pixels for the table. If provided, this amount is divided by the numcols and used as the width for each cell. Use '#' for DRefs. 
+
+=item style
+
+Optional. The font style to apply to the contents of each cell. Defaults to normal. Use '#' for DRefs. 
+
+=back
+
+=head1 Hidden
+
+Generates a series of hidden form fields. 
+
+    [hidden args="criteria view"]
+
+=over 4
+
+=item args
+
+A list of argument names to hide. If multiple argument names are given, each of them will be handled in the same way. Use '#' for DRefs. Required argument. 
+
+=item source
+
+Optional. Defaults to #request.args, where the current WebApp::Request::CGI arguments are expected to be stored. 
+
+=item prefix
+
+Optional. A string to prefix before each argument name. Use '#' for DRefs.
+
+=item skip
+
+Optional. A regular expression for argument names to skip. Use '#' for DRefs. 
+
+=item flat
+
+Optional flag. Unless this flag is set, the hidden tag will use L<Data::Collection>'s scalarkeysandvaluesof function to determine the non-leaf items in the argument values. 
+
+I<This option is likely to go away unless someone needs it; let me know if you do. -Simon>
+
+=back
+
+Unless the flat flag is used, multiple hidden arguments will be generated for reference values. For example, if [hidden args=user] was invoked during a request to http://localhost/script.cgi?user.name=Joe&user.email=joe@spud.com, it would generate <input type=hidden name=user.name value=Joe><input type=hidden name=user.email value=joe@spud.com>.
+
+=head1 If
+
+Selectively evaluates its contents based on a series of tests. If any of the tests fail, none of the contents are displayed until an else or tag.
+
+    [if value=#request.args.command isstring=Save]
+      You clicked the Save button.
+    [/if]
+
+=over 4
+
+=item value
+
+The value to be tested. Use '#' for DRefs. Required argument. 
+
+=item not
+
+Optional flag. Reverses the outcome of the tests.
+
+=item isstring
+
+Optional. A string which the value must be equal to. Use '#' for DRefs.
+
+=item isequal
+
+Optional. A number which the value must be equal to. Use '#' for DRefs.
+
+=item isgreater
+
+Optional. A number which the value must be greater than. Use '#' for DRefs.
+
+=item islesser
+
+Optional. A number which the value must be less than. Use '#' for DRefs.
+
+=item isdefined
+
+Optional flag. The value must be defined.
+
+=item isdefined
+
+Optional flag. The value must be true (not undefined, zero, or the empty string).
+
+=item isempty
+
+Optional flag. The value must be an empty string, or a reference to an empty hash or array.
+
+=item regex
+
+Optional. A Perl regular expression the value must match.
+
+=item isinlist
+
+Optional. A quoted sequnce of space separated words, one of which must be the same as the value.
+
+=back
+
+=head1 Else
+
+The else tag reverses the test success value of the inner-most If block.
+
+    Thank you for purchasing [if value=#n isqual=1] 
+      a gift.
+    [else]
+      [print value=#n] gifts.
+    [/if]
+
+There are no arguments for this tag.
+
+This tag can only be used within the immediate scope of an If tag.
+
+=head1 Perl
+
+Executes a bit of in-line Perl. 
+
+    [perl]
+      return $ENV{'SERVER_PROTOCOL'};
+    [/perl]
+
+=over 4
+
+=item target
+
+Optional. The DRef at which to store the value returned by the Perl code. 
+
+=item silently
+
+Optional flag. If a target is not provided, the perl tag will return the result of the expression unless this argument I<is> provided.
+
+=item aslist
+
+Optional flag. Interprets the Perl in a list context and returns an array reference containing the results.
+
+=item ashash
+
+Optional flag. Interprets the Perl in a list context and returns a hash reference containing the results.
+
+=back
+
+=head1 Print
+
+Echoes the provided value with escape and format options.
+
+    [print value=#request.args.name]
+
+=over 4
+
+=item value
+
+The value to be printed. Use '#' for DRefs. Required argument. 
+
+=item plus
+
+Optional. A numeric value to add the the value argument. Use '#' for DRefs. 
+
+=item ifempty
+
+Optional. An alternative string to use if value is empty.
+
+=item format
+
+Optional. A format specifier to be handled by L<Text::Format>. If desired, a format option may be appeneded, separated with sapces. For example, format=roman will covert the value to be printed to Roman numerals; format="date short" would attempt to parse the value as a date and display it in month/day/year style.
+
+=item escape
+
+Optional. An escape specifier to be handled by L<Text::Escape>. Multiple escape specifiers may be separated with spaces and quoted. For example, escape=url will protect the value for use in a URL; escape="uppercase quote" will convert the value to be printed to uppercase and enclose it with double-quotes.
+
+=back
+
+=head1 Redirect
+
+Using its evaluated contents as a URL, redirects and dies. Once this happens, execution of the current request generally stops.
+
+    [redirect][print value=#homepage escape=url][/redirect]
+
+There are no arguments for this tag.
+
+It the URL starts with a slash, the current web server address is prepended to it. If not, and the URL is not fully qualified, the web server address, script URL, and non-terminal path-info is prepended. 
+
+For example, if you had made a request for http://localhost/script.cgi/foo/bar.page, and the page invoked [redirect]/baz.page[/redirect], you would be redirected to http://localhost/baz.page; if it used [redirect]baz.page[/redirect], you would be sent to http://localhost/script.cgi/foo/baz.page.
+
+=head1 Set
+
+Evaluates its contents and sets the target dref to the result.
+
+    [set target=my.string]
+      The time is [print value=#server.timestamp]
+    [/set]
+
+=over 4
+
+=item target
+
+The DRef at which to store the value. Required argument. 
+
+=item asdref
+
+Optional flag. Stores the value found by calling getData with the tag contents.
+
+=item wordsof
+
+Optional flag. Stores a reference to an array of phrases returned by calling string2list with the tag contents.
+
+=item escape
+
+Optional. An escape specifier to be handled by L<Text::Escape>. Multiple escape specifiers may be separated with spaces and quoted.
+
+=back
+
+=head1 Silently
+
+Executes the contained script without returning its results.  
+
+    [silently]
+      [print value=5]
+    [/silently]
+
+There are no arguments for this tag.
+
+=head1 Sort
+
+Sorts an array of items by looking up as DRefs each of the provided keys.  
+
+    [sort list=#records target=#sorted keys="lastname firstname"]
+
+=over 4
+
+=item list
+
+The items which are to be sorted. Use '#' for DRefs. Required argument.
+
+=item target
+
+Optional. If provided, the list will be copied and the sorted version stored at this DRef; otherwise the list will be sorted in place.
+
+=item keys
+
+The keys to examine within each item. Earlier items in the list take precedence. Use '#' for DRefs. Required argument. 
+
+=back
+
+=head1 Warn
+
+Evaluates its contents and logs them using Perl's warn statement.  
+
+    [warn]I'm melting![/warn]
+
+There are no arguments for this tag.
+
+=head1 Copyright
+
+(c) 1998 Evolution Online Systems
+Jeremy G. Bishop <jeremy@evolution.com>

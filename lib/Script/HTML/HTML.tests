@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+use lib '/opt/perl/lib/Evo';
+
+use Text::PropertyList qw( astext );
+
+use Script::HTML::Tag;
+use Script::HTML::Forms;
+use Script::Literal;
+
+my $form = Script::HTML::Tag->new_from_definition( 'form', {'method'=>'post'}, 
+  Script::HTML::Tag->new_from_definition( 'p', {'align'=>'right'} ),
+  Script::Literal->new( 'click the button' ),
+  Script::HTML::Tag->new_from_definition( 'input', {'type'=>'submit'} ),
+);
+
+print 'as text: ' . astext($form) . "\n";
+print 'output: ' . $form->interpret() . "\n" . "\n";

@@ -1,0 +1,59 @@
+=head1 Evo Source Style Guide
+
+=head2 HTML
+
+Good:
+
+   <p align=center>
+
+Not good:
+
+   <P ALIGN="center">
+
+=over 4
+
+=item Use lowercase for tag names, argument names, and case-independant values.
+
+=item Only use double-quotes where they're needed.
+
+In particular, don't put quotes around simple alphanumeric argument values.
+
+=back
+
+=head2 Perl
+
+Good:
+
+   if ( defined $result ) {
+     print "Result: $result\n";
+     push @results, $result;
+   }
+
+   print "Result: $result\n" if ( defined $result );
+
+   foreach ( @results ) { print "Result: $_\n" } 
+
+Not good:
+
+   if ( defined $result )
+   {
+	    print "Result: $result\n";
+   }
+
+=over 4
+
+=item Don't unnecessarily place open/close block braces on separate lines.
+
+=item Consider using the default $_ iterator for one-line foreach statements.
+
+Generally, don't do this if you're calling a potentially complicated function.
+
+=item No space between function name and its argument list's open-parenthesis.
+
+=item Use a consistent two- or four-space indent.
+
+The Evo libraries use two-space indents throughout.
+
+=back
+
+=cut

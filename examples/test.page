@@ -1,0 +1,10 @@
+<html>
+  <head>
+    <title>test.page</title>
+  </head>
+  <body>
+    <h1>It Worked!</h1>
+    <hr>
+    <pre>[print value=#request escape=astext]</pre>
+  </body>
+</html>

@@ -1,0 +1,276 @@
+### Overview
+  # This module supplies a general purpose error handling architecture.
+  #
+  # If an exception is passed up beyond the outermost try block, it gets
+  # handled by the application's $SIG{DIE} handler and the program stops.
+  #
+  # As the caller, use this syntax to catch errors in the contained code and
+  # any functions or methods it invokes.
+  # 
+  # try {
+  #   ... perl_statements ...
+  # } catch 'error message' => { handle_error; };
+  #
+  # try {}; 			Call without a handler to surpress all errors
+  # try {} catch_with_warning;	All exceptions are logged as warnings.
+
+### To Do
+  # - provide a mechanism to build standard error messages, taking any 
+  # required parameters. For example throw failure('e_arg_rqd', 'name').
+
+package Err::Try;
+
+require 5.000;
+
+use Exporter;
+@ISA = qw[Exporter];
+@EXPORT = qw( try catch catch_with_warning );
+
+# use strict;
+
+sub try (&;@) {
+  my $block = shift;
+  my @catchers = @_;
+  warn "catchers are " . join(', ', @catchers);
+  
+  my @results;
+  if (wantarray) {
+    @results =    eval { local($SIG{'__DIE__'}); &$block };
+  } else {
+    $results[0] = eval { local($SIG{'__DIE__'}); &$block };
+  }
+  
+  if ( $_[0] eq 'finally' ) {
+    shift;
+    my $final = shift;
+    &$final;
+  }
+  
+  return ( wantarray ? @results : $results[0] ) unless ($@);
+  
+  my ($expr, $handler);
+  while ( scalar @catchers ) {
+    ($expr, $handler) = (shift(@catchers), shift(@catchers));
+    warn "trying to catch $expr, $handler \n";
+    return &$handler if ( $expr eq 'otherwise' or $@ =~ /$expr/ );
+  }
+  
+  die;
+}
+
+sub catch ($&) { @_; }
+
+sub catch_with_warning () { 'otherwise' => sub { warn "Exception: $@\n" }; }
+
+### 
+
+package Err::Exception;
+
+sub catch { @_ }; 
+
+sub new {
+  my ($class, $string) = @_;
+  bless \$string, $class;
+}
+
+sub class_and_instance {
+  return ($class, $self);
+}
+
+sub throw () {
+  my $class_or_self = shift;
+  
+  my $class = ref $class_or_self || $class_or_self;
+  my $self = ref $class_or_self ? $class_or_self : $class->new( @_ );
+  
+  $Exception::E = $self;
+  
+  # Die with something along the lines of a usefull message
+  die "Uncaught exception ($class):\n" . $self->dump;
+}
+
+sub dump {
+  my $self = shift;
+  $$self;
+}
+
+1;
+
+__END__
+
+
+# Old code below...
+
+
+### exception.pm - exception handling
+
+### Copyright 1997 Evolution Online Systems, Inc.
+  # Basic try and catch code from <cite>Programming Perl</cite>.
+  # Simon    M. Simon Cavalletto (simonm@evolution.com)
+
+### Overview
+  # This module supplies a general purpose error handling architecture.
+  #
+  # The below comments are devided by context into caller and callee usages,
+  # but of course you can be both caller (catching exceptions in code you call)
+  # and callee (reporting exceptions up the line to your caller).
+  #
+  # If an exception is passed up beyond the outermost try block, it gets
+  # handled by the application's SIG{DIE} handler and the program stops.
+  #
+  # CREATING EXCEPTIONS
+  # As the callee, use these methods to exit immediately with an error.
+  # These exits terminate any intermediate functions in the call chain as well.
+  #
+  # throw "error message" if (err condition);
+  # assert($constraint, "error message");
+  # 
+  # HANDLING EXCEPTIONS
+  # As the caller, use this syntax to catch errors in the contained code and
+  # any functions or methods it invokes.
+  # 
+  # try {
+  #   ... perl_statements ...
+  # } catch {
+  #   handle_error if ($_ =~ /error message/);
+  # };
+  #
+  # try {}; 			Call without a handler to surpress all errors
+  # try {} catch_with_warning;	All exceptions are logged as warnings.
+
+### To Do
+  # - provide a mechanism to catch some but not all exceptions, passing the 
+  # others up to another caller.
+  #
+  # - provide a mechanism to build standard error messages, taking any 
+  # required parameters. For example throw failure('e_arg_rqd', 'name').
+  #
+  # - add helper functions with witty names.
+  #
+  # - look at other exception handling packages for ideas.
+  #
+  # Q: can we do local $main::SIG{__DIE__}='IWAE::carp::realdie'; in try { }?
+
+### Change History
+  # 19970323 Added assert function 
+  # 19970323 Started change log (couple of untracked weeks in there) -Simon
+
+package Err::exception;
+
+require 5.000;
+use strict 'refs';
+
+use Carp;
+
+use Exporter;
+@ISA = qw[Exporter];
+@EXPORT = qw[throw assert try catch catch_with_warning];
+
+sub try (&;$) {
+  my($try, $catch) = @_;
+  # I dunno if this is the right thing to do. We check the caller's wantarray,
+  # which makes makes sense if we're doing 
+  #   sub x { try { return something } catch { something failed }; }
+  # if we want the return something to get the wantarray context of sub x.
+  # But maybe that's not a good idea.
+  my($unused, $unused, $unused, $unused, $unused, $wantarray) = caller(1);
+  if ($wantarray) {
+    local($SIG{'__DIE__'});
+    my @results = eval { &$try };
+    return @results unless ($@);
+  } else {
+    local($SIG{'__DIE__'});
+    my $result = eval { &$try };
+    return $result unless ($@);
+  }
+  if ($@ and $catch) {
+    assert(ref $catch eq 'CODE', 'Exception handler is not a function');
+    local ($_) = $@;
+    return &$catch;
+  }
+  return;
+}
+
+sub catch (&) {
+  return shift;
+}
+
+sub catch_with_warning {
+  return sub {
+    warn "Exception: $_ \n";
+  };
+}
+
+sub throw ($) {
+    my ($message) = @_;
+    # my($pack,$file,$line,$sub) = caller(1);
+    # $message .= " at $file line $line.\n" unless $message=~/\n$/;
+    $message .= "\n" unless $message=~/\n$/;
+    realdie $message;
+}
+
+sub assert ($;$) {
+    my ($expr, $message) = @_;
+    return if $expr;
+    if (! $message) {
+      $message = "assertion failed";
+    } elsif ($message !~ /\n$/) {
+      $message .= "\n";
+    }
+    realdie $message;
+}
+
+1;
+
+__END__
+
+Look at the Exception modules.
+
+Error-like Things To Do
+  Warn - Log that something happened
+  Die  - Throw an exception
+  Fail - Exit the current routine (return undef; can we do this??)
+
+We often have a message or message template and some relevant variables.
+
+Plus we want to be able to catch all warn/die/whatevers and write them to STDERR or a log, automatically notify the sysadmin, or whatever...
+
+Should be able to turn logging on and off for different subsystems/modules.
+
+We can group errors into semantic categories:
+  Plain Perl 
+  Not Permitted
+  Resource Unavailable
+  External Service Unavailable
+  Script parsing / syntax error
+  Script execution error (tag failed, etc)
+  Conf & similar errors
+
+Depending on the kind of error, we might want to know:
+- data or script file name and line
+- functions's name, package, and line
+- caller's name, package, and line
+- entire calling stack
+
+CORE and Carp give us:
+  warn - warn source
+  die - die source
+  carp - warn caller
+  croak - die caller
+  confess - die stacktrace
+  
+Calling styles:
+  
+  err( err_info )
+  
+  assert( expr , err_info )		# basically "err() unless expr"
+  
+  try {
+    code block 
+  } catch {
+    errtype => code,
+  };
+  
+Catchers could be tested in order so that an early one can rethrow and have a later one catch it [?]
+
+

@@ -1,0 +1,381 @@
+=head1 Evolution's Perl Modules
+
+This is a top level outline of Evolution's current suite of Perl modules.
+
+
+=head2 Class 
+
+=over 4
+
+=item Class::NamedFactory
+
+Provides class registration and by-name lookup methods.
+
+Not sure this is a good idea. Basic inline POD. 
+
+=back
+
+
+=head2 Data
+
+=over 4
+
+=item Data::DRef
+
+Uses delimited keys to get and set values in nested structures.
+
+Stable. Should move keysof to here and tidy up the function names. Decent inline POD.
+
+=item Data::Collection
+
+Provides nested datastructure functions based on DRef.
+
+Stable. See note above. Decent inline POD.
+
+=item Data::Sorting
+
+Provides utility functions for sorting data structures.
+
+Needs to be refactored to support locales, reverse ordering. Basic inline POD.
+
+=item Data::Criteria
+
+Provides a class framework for record selection rules.
+
+Soon to be obsolete in favor of DBO::Criteria. POD outline only.
+
+=back
+
+
+=head2 DateTime
+
+=over 4
+
+=item DateTime::Formats
+
+Provides a Text::Format intrface to date and time values.
+
+Stable. No POD, but decent inline comments.
+
+=item DateTime::Date
+
+Object representing a day.
+
+Stable but incomplete. Basic inline POD.
+
+=item DateTime::Time
+
+Object representing a time.
+
+Stable but incomplete. No POD.
+
+=item DateTime::moment, duration, period
+
+Additional temporal objects.
+
+Not working. No POD.
+
+=back
+
+
+=head2 DBAdaptor, FieldSet, Record, Field
+
+Soon to be obsolete in favor of DBO::Table, DBO::Record, DBO::Record::Persistent, and DBO::Field. 
+
+
+=head2 DBO
+
+=over 4
+
+=item DBO::Table
+
+Provides an abstract interface class for row storage systems.
+
+Working but not thoroughly tested. Basic inline POD.
+
+Subclasses: DelimitedText, Win32ODBC, MySQL, DBDInformix.
+
+=item DBO::Criteria
+
+Provides a collection of classes modeling selection rules.
+
+Working but not thoroughly tested. POD outline only.
+
+Subclasses: StringEquality, StringInequality,  SubString, CaseInsensitiveSubString, NumericEquality, NumericGreater, NumericLesser, MultiMatch, And, Or.
+
+=item DBO::Record
+
+Generates data bearing object classes by compositing DBO::Fields.
+
+Working, but interface still being revised.
+
+=item DBO::Field
+
+Fields provide an interface for attributes of other objects.
+
+Working, but interface still being revised.
+
+=back
+
+
+=head2 Devel
+
+=over 4
+
+=item Devel::PreProcessor
+
+Module inlining and other Perl source manipulations.
+
+Stable. Decent inline POD.
+
+=back
+
+
+=head2 Err
+
+All of these packages should be examined and possibly discarded in favor of 5.004 standard modules, or possibly consolidated into a single package..
+
+=over 4
+
+=item Err::Debug
+
+Provides keyword-based log filtering and output escaping.
+
+Semi-stable. Decent inline POD.
+
+=item Err::Exception
+
+Provides simple exception handling based on eval.
+
+UNSTABLE. No POD.
+
+=item Err::LogFile
+
+Lets you designate a target for error messages
+
+Semi-stable. Decent inline POD.
+
+=item Err::WebLogFormat
+
+Reformats Perl warnings for web server error logs.
+
+Semi-stable. Decent inline POD.
+
+=back
+
+
+=head2 File
+
+=over 4
+
+=item File::Name
+
+File path objects and related operations.
+
+Mostly stable. Basic inline POD.
+
+=item File::SearchPath
+
+By-name file access across a group of directories.
+
+Subclasses: SearchPathSet and SearchPathProxy
+
+Stable. POD outline only.
+
+=item File::SystemType
+
+Provides information about the local file system.
+
+Stable but a bit questionable. No POD.
+
+=back
+
+
+=head2 Number
+
+=over 4
+
+=item Number::Bytes
+
+Provides formatting for byte and bit counts.
+
+Stable. Basic inline POD.
+
+=item Number::Currency
+
+Provides currency-appropriate formatting for numbers.
+
+UNSTABLE. POD outline only.
+
+=item Number::Formats
+
+Provide a Text::Format interface for the Number::* routines
+
+Need to resolve Text/String issue, qv. No POD.
+
+=item Number::Roman
+
+Provides functions to convert to and from roman numerals.
+
+Stable. Basic inline POD.
+
+=item Number::Separated
+
+Comma separated integers.
+
+Stable but incomplete; should handle floating point numbers as well. Basic inline POD.
+
+=item Number::Stats
+
+Provides basic math manipulations for groups of numbers.
+
+Stable, but perhaps unnecesary. Basic inline POD.
+
+=item Number::Value
+
+Numeric value objects with access and formatting methods.
+
+Stable, but not used anywhere. No POD.
+
+=item Number::Words
+
+Localizable words for numbers and ordinals.
+
+Stable, but incomplete. Basic inline POD.
+
+=item Number::WorkTime
+
+Minutes as hours and workdays.
+
+Stable, but incomplete. Basic inline POD.
+
+=back
+
+
+=head2 Script
+
+=over 4
+
+=item Script::Parser
+
+Supports the parsing of text into Script::Elements.
+
+Stable. POD outline only.
+
+=item Script::Element
+
+Is the abstract base class for all EvoScript objects.
+
+Stable. Basic inline POD.
+
+=item Script::Literal
+
+Provides Element classes for literals and escaped literal.
+
+Stable. Basic inline POD.
+
+=item Script::Sequence
+
+Class for elements containing an array of sub-elements.
+
+Stable. POD outline only.
+
+=item Script::Tag
+
+Superclass for square bracketed dynamic tags.
+
+Stable. POD outline only.
+
+=item Script::HTML
+
+Includes standalone and container tags for HTML Elements.
+
+Stable. POD outline only.
+
+=item Script::PoundTag
+
+Square brackets around a pound, method, and args.
+
+Untested. POD outline only.
+
+=back
+
+
+=head2 Text/String
+
+=over 4
+
+=item Text::Escape
+
+Backslash, quoting, and general escape/unescape functions.
+
+Stable; interface could use some work. Basic inline POD.
+
+=item Text::Excerpt
+
+Truncate strings with elipses.
+
+Stable; interface could use some work. Basic inline POD.
+
+=item Text::Format
+
+Formatting gateway routines for numbers, dates, and such like.
+
+Stable; interface could use some work. Basic inline POD.
+
+=item Text::PropertyList
+
+Turn data structures into NeXT's PropertyList text format -- and back again
+
+Stable; interface could use some work. Basic inline POD.
+
+=item Text::Words
+
+Parse and print words and quoted phrases as simple lists and hashes
+
+=back
+
+
+=head2 WebApp
+
+=over 4
+
+=item WebApp::Server
+
+Provides a framework for Perl web applications.
+
+Almost stable. Basic inline POD.
+
+=item WebApp::Request
+
+Superclass for HTTP-request interfaces.
+
+Almost stable. Basic inline POD.
+
+Subclasses: CGI, FastCGI, HTTP, Apache.
+
+=item WebApp::Handler
+
+Provides a superclass for bundles of server functionality.
+
+Stable. POD outline only.
+
+Subclasses: FileHandler, ScriptHandler, LoggingHandler, ResourceHandler, SiteHandler, Plugins....
+
+=item WebApp::Resource
+
+Superclass for file-based application objects.
+
+Stable. POD outline only.
+
+Subclasses: ScriptedPage, Config, Site, Records....
+
+=back
+
+=head1  
+
+Copyright 1996, 1997, 1998 Evolution Online Systems; available for use under the terms of the Artistic License.
+
+1998-03-25 -Simon
+
+=cut

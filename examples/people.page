@@ -1,0 +1,68 @@
+  [silently]
+    [set target=#attributes wordsof] name gender age height weight [/set]
+    [set target=#filename]people.txt[/set]
+    [if value=#request.args.command isstring="Add"]
+      [perl]
+	# Create File::Name object
+	my $filename = File::Name->new( getData('filename') );
+	
+	# Map request data to an ordered list
+	my @data = map { getData("request.args.person.$_") } 
+			@{ getData('attributes') };
+	
+	# Write data to the file in tab delimited format
+	$filename->append_text_line( join("\t", @data) )
+      [/perl]
+    [/if]
+  [/silently]
+  <html>
+    <head><title>People</title></head>
+    <body>
+  
+      <h1>The People:</h1>
+      [perl target=#people]
+	# Create File::Name object
+	my $filename = File::Name->new( get('filename') );
+      
+	# Read lines of data from the file
+	my @data = $filename->get_text_lines();
+      
+	# Split the lines of data into lists and return a list of these lists
+	return map { [ split( /\t/, $_ ) ] } @data;
+      [/perl]
+      <table>
+	<!-- The Column Titles -->
+	<tr>
+	[foreach target=#attributes]
+	  <td><b>[print value=#loop.value]<b></td>
+	[/foreach]
+	</tr>
+      <!-- The Rows of Data -->
+      [foreach target=#person]
+	<tr>
+	[foreach target=#loop.value]
+	  <td>[print value=#loop.value]</td>
+	[/foreach]
+	</tr>
+      [/foreach]
+      </table>
+      
+      <h1>Add A Person:</h1>
+      <form>
+	<table>
+	[foreach target=#attributes]
+	  <tr>
+	    <!-- Attribute Name -->
+	    <td><b>[print value=#loop.value]<b>/td>
+	    <!-- Attribute Input Field -->
+	    <td>
+	      <input type="text" name="person.[print value=#loop.value]">
+	    </td>
+	  <tr>
+	[/foreach]
+	</table>
+	<input type="submit" name="command" value="Add">
+      </form>
+      
+    </body>
+  </html>

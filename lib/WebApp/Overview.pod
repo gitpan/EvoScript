@@ -1,0 +1,99 @@
+=head1 The WebApp Framework
+
+WebApp is an application framework for Perl Web server software. 
+
+=head1 Synopsis
+
+    #!/usr/local/perl
+    
+    use WebApp::Server;
+    my $server = WebApp::Server->new();
+    
+    use WebApp::Request::CGI;
+    $server->request_class( 'WebApp::Request::CGI' );
+    
+    use WebApp::Handler::ScriptHandler;
+    WebApp::Handler::ScriptHandler->add_new( $server );
+    
+    use WebApp::Handler::LoggingHandler;
+    WebApp::Handler::LoggingHandler->add_new( $server );
+    
+    $server->run();
+
+=head1 Classes
+
+The key classes in this framework are:
+
+=over 4
+
+=item WebApp::Server
+
+The application engine. Each WebApp-based program should create, configure, and start a single Server instance.
+
+=item WebApp::Request 
+
+Interface to the request source. Each Request must collect all of the incoming arguments and be able to return the response page to the user. Concrete subclasses: CGI, FastCGI.
+
+=item WebApp::Handler 
+
+Application control classes that provide bundles of server functionality. Each Handler in turn gets to log, modify, or respond to incoming requests. Concrete subclasses: LoggingHandler, FileHandler, ResourceHandler, ...
+
+=item WebApp::Resource 
+
+A persistant application object defined in a file. Concrete subclasses: ScriptedPage, Site, Records, ...
+
+=back
+
+Some important utility packages used by the framework are:
+
+=over 4
+
+=item File::Name, File::SearchPath
+
+Used by Handlers, Resources.
+
+=back
+
+=head1 Caveats and Upcoming Changes
+
+There are no major interface changes anticipated for this framework.
+
+=head1 See Also
+
+L<WebApp::Server>, L<WebApp::Request>, L<WebApp::Handler>, L<WebApp::Resource>
+
+=head2 Change History
+
+  1998-03-05 Remaining .pm file scrapped.
+  1998-02-17 Framework overview attached in POD format.
+  1998-02-17 Moved WebApp.pm functionality into distinct Server package.
+  1997-10-05 Version 4 forked; Evo::request.pm is now WebApp.pm, Handler.pm
+  1997-09-24 IntraNetics97 Version 1.00.000
+  1997-08-15 Added developer role.
+  1997-08-15 Changed admin user regex to be case-insensitive and meta-quoted.
+  1997-08-09 Fixed a use of fetchwithcriteria, using fetchandreturn instead.
+  1997-08-08 More load_user_info changes.
+  1997-08-07 Changes to load_user_info
+  1997-08-05 Folded [loaduser] functionality into this module.
+  1997-04-12 Moved here from various cgi scripts. -Simon
+
+=head2 Contributors
+
+=over 4
+
+=item Simon
+
+M. Simon Cavalletto (simonm@evolution.com)
+
+=back
+
+=head1 Copyright
+
+Copyright 1996, 1997, 1998 Evolution Online Systems, Inc. 
+Contact us at info@evolution.com or through http://www.evolution.com/.
+
+You may use this document for free under the terms of the Artistic License.
+
+The latest version of this and other portions of the EvoScript web application framework is available from http://www.evoscript.com/.
+
+=cut

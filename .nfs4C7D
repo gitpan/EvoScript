@@ -1,0 +1,84 @@
+README - EvoScript v4.00b3 - Tuesday May 19th, 1998
+
+Requirements:
+
+  The following libraries sre required for EvoScript to function. They are
+  downloadable from CPAN (http://cpan.perl.org).
+
+    Class::MethodMaker
+    Ref
+    Time::JulianDay
+    Time::ParseDate
+    URI::Heuristic
+
+  The following libraries are needed to support some platforms, and also
+  available via CPAN.
+
+    Mysql
+    Win32::ODBC
+
+Manifest:
+
+  EvoScript.cgi
+
+    The EvoScript executable.
+
+  EvoScript_Included.cgi
+
+    The EvoScript executable combined with library files into one big
+    executable.
+
+  docs/
+
+    HTML and text versions available at http://www.evoscript.org
+
+    EvoDoc.pod
+  
+      This document is nessecary reading for any evoscript user. It contains
+      instructions for installation, configuration and EvoScript authoring.
+  
+    Tags.pod
+  
+      Definitions of all the basic EvoScript tags.
+  
+    Catalogue.pod
+  
+      A list of all of the top level packages in the EvoScript supporting
+      libraries.
+
+  examples/
+
+    test.page
+
+      A simple script to test installation.
+
+    people.peage
+
+      A sample script showing how perl and evoscript can be combined to write
+      little applications.
+
+  lib/
+  
+    The EvoScript supporting libraries. POD is embedded in each library file
+    for more detailed explanation.
+  
+
+Installation:
+
+  See docs/EvoDoc.pod
+
+Release Notes:
+
+  The documentation, among other things is incomplete in this release.
+  Specifically, much of EvoScript's database wrapping functionality remains
+  undocumented. This documentation is in the works and should be available
+  sometime soon. So if you've downoladed this release, be sure to check the web
+  site in a few weeks for the new documentation and sample record resources.
+
+  The package names may be modified to better conform to CPAN convention after
+  this release.
+
+--
+Copyright 1998 Evolution Online Systems
+Jeremy Bishop <jeremy@evolution.com>
+The most recent version of EvoScript is available at http://www.evoscript.org

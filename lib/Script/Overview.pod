@@ -1,0 +1,265 @@
+=head1 The Script Framework
+
+The Script Framework provides an architecture for working with dynamic elements parsed from embedded markup such as HTML.
+
+=head1 Synopsis
+
+    use Script;
+    
+    print runscript( "Hello, the time is now [print value=#timestamp]" );
+
+=head1 Description
+
+The Script::* packages implement a simple scripting language designed for the Web. 
+
+The source text for a script can contain literal text interspersed with tags and other "dynamic" elements. A parser and syntax classes build an OOP representation of the script, then provide an interpret method to produce the evaluated output.
+
+=head1 Reference
+
+Script.pm provides a single wrapper function for interpreting a scripted string.
+
+=over 4
+
+=item runscript( $script_text ) : $results
+
+Evaluates the provided script text and returns the output.
+
+=back
+
+=head1 Class Overview
+
+The key classes in this framework are:
+
+=over 4
+
+=item Script::Parser 
+
+The parser class provides objects that control the script source-parsing process.
+
+=item Script::Element 
+
+This is the abstract superclass for interpretable script objects. 
+
+=item Script::Literal 
+
+An Element representing a static text string.
+
+=item Script::Sequence 
+
+A script sequence is an element containing an array of other elements. The parser uses a sequence to hold all of the elments found in the source text.
+
+=item Script::HTML::* 
+
+This package provides parsing and interpretation of HTML tags as script elements. The abstract container class inherits from both Tag and Sequence to provide a tag-with-contents behaviour.
+
+=item Script::Tags::*
+
+These tags are square-bracketed elements with a name and a series of key-value-pair arguments, with a matching container subclass. 
+
+=back
+
+An important utility package used by the framework is:
+
+=over 4
+
+=item Data::DRef
+
+Provides an object-graph entry point and a standard, lightweight data access protocol.
+
+=back
+
+=head2 Script::Parser
+
+During parsing, these objects maintain a source text stream and a stack of elements representing the current sequence and its parents. Each of the syntax classes in turn is presented with the opportunity to nibble some text off the front of the source text and push elements on to the current sequence.
+
+The client interface is:
+
+=over 4
+
+=item Script::Parser->new
+
+Creates a new Parser.
+
+=item $parser->parse( $text )
+
+Parses the provided source text and returns a sequnce of elements extracted from it.
+
+=back
+
+The parser interface used by the syntax classes is:
+
+=over 4
+
+=item $parser->get_text( $regex )
+
+Text extraction function used to pull text off of the front of the source. Returns the text matching the expression,  or the empty string.
+
+=item $parser->current
+
+Returns the current target element.
+
+=item $parser->add( $element )
+
+Adds the provided element to the current target.
+
+=item $parser->push( $element )
+
+Pushes the provided element onto the top of the current stack. 
+
+=item $element = $parser->pop( $element )
+
+Pops the provided element off of the current stack, along with any items that were above it.
+
+=back
+
+
+=head2 Script::Element
+
+Abstract superclass for Elements in a Script. 
+
+Almost no methods are defined here, as the subclasses vary widely.
+
+=head2 Script::Literal
+
+=over 4
+
+=item $literal->interpret
+
+Returns this literal's string value. 
+
+=back
+
+Also includes Script::EscapedLiteral, which provide speciality parsing for backslash escapes including \ff hex encoding, and \r\n codes. Also handled is the backslash-newline-whitespace pattern, which does not generate any output
+
+=head2 Script::Sequence
+
+Script Sequences allow you to treat a group of elements as a single element.
+
+=over 4
+
+=item $sequence->elements
+
+Returns the contained elements. 
+
+=item $sequence->add
+
+Returns the contained elements. 
+
+=item $sequence->interpret
+
+Returns the concatenation of its elements' iterpretations. 
+
+=back
+
+
+=head2 Script::HTML::*
+
+Classes for HTML tags.   
+
+=over 4
+
+=item html_tag( $name, { %args }, @contents )
+
+Constructs a new HTML tag with the provided name, such as 'br'. 
+
+=item $tag->interpret
+
+Returns the HTML expression of this tag: standalone tags write "<name key=value>"; containers return the same followed by the interpreted results of their contents and then a closing "</name>" tag. 
+
+=back
+
+=head2 Script::Tags::*
+
+Dynamic tags, written with square brackets.
+
+=over 4
+
+=item Script::Tag->new_from_string($name_and_args_without_brackets)
+
+Parses a "name key=value" string and returns a Tag object.
+
+=item Script::Tag::SubClass->new( %args )
+
+Creates a new instance of the specified Tag subclass.
+
+=item $tag->interpret
+
+Returns the output value of this tag. The results will vary widely from one tag to the next; many perform some silent task and return nothing.
+
+=item $tag->get_args
+
+Returns a hash containing an interpreted version of the tag's arguments: #drefs are looked up, defaults are filled in, error messages are generated.
+
+=back
+
+=head1 Caveats and Upcoming Changes
+
+There are no major interface changes anticipated for this framework.
+
+It would be nice to be able to more effectively control which syntaxes were in effect; for example, HTML tag parsing is only sometimes desirable.
+
+=head1 See Also
+
+L<Script::Element>, L<Script::Literal>, L<Script::Sequence>, L<Script::Tag>, L<Script::HTML::Tag>
+
+=head1 Change History
+
+  1998-02-17 Framework overview attached in POD format.
+  1998-02-06 Doc update.
+  1997-11-03 Added runscript() function and exported it.
+  1997-09-** Forked and refactored; new subpackages and more OOP-ish design.
+  1997-04-29 Continued to move towards method style invocation for mgr funcs
+  1997-04-14 Geez, it's been a year since we started this.
+  1997-04-12 Minor changes to tag argument interpretation.
+  1997-04-03 Tag argument interpretation routines added.
+  1997-03-22 When parsing tag arguments, flags are returned as name=1.
+  1997-03-11 Split script.tags.pm into script::*.pm and tag_definitions()
+  1997-02-04 Added silently tag
+  1997-01-28 Moved date and time formatting to IWAE::datetime.pm
+  1996-01-25 Significant rearrangement, including codetype_handler hash
+  1997-01-24 Moved splitwords from here to IWAE::dictionary.
+  1997-01-20 Integration of new tags by Jeremy & Piglet, plus loaddictionary.
+  1997-01-17 Added switchcontext, cgi-redirect, others.
+  1997-01-17 Foreach now cleans up its key and val registers.
+  1996-01-15 Support for script_tags and perl_statements code types
+  1997-01-14 Added define_a_new_tag_in_perl.
+  1997-01-14 Tuned parse, run_each_component, run_each_tag.
+  1997-01-13 Extensive rework, code optimization, new [perl] and [set] tags
+  1997-01-13 Removed Text::ParseWords in favor of local splitwords function.
+  1997-01-13 Moved basic tag definitions to script.tags.pl
+  1997-01-11 Cloned and cleaned for IWAE. -Simon
+  1997-01-08 Fixed htmlescape double subsitution; &amp; then &quot; -Richard
+  1996-10-30 Support for same script context in [value interpret] -Piglet
+  1996-10-06 Tweaks to parse to fix handling of \['s.
+  1996-09-29 Added [print htmlescape] and [print interpret].
+  1996-09-28 A new [set]; added [foreach scalar]; [print] now eq [value].
+  1996-09-19 Added [value case=] and fixed [foreach join=].
+  1996-09-13 Additional [foreach] attributes: periodicjoin and words.
+  1996-09-13 Fixed support for tag attributes without '='s.
+  1996-09-09 Lots of work on tag methods, especially on [foreach].
+  1996-09-08 Added [if].
+  1996-08-25 Minor tweakage. -Simon
+  1996-07-10 Significant cleanup work. -Piglet
+  1996-08-07 Basic structure for evaluate/evalItem and method calling.
+  1996-08-05 Ongoing abuse.
+  1996-08-01 Parsing for container tags; name now 'Evo::script'.
+  1996-07-10 Ongoing abuse.
+  1996-07-05 Support for custom tag method tables.
+  1996-06-28 Support for kvp attributes within tags.
+  1996-06-24 Minor revisions.
+  1996-06-23 Rewrite to support nested data, name now 'Evo::interpret'.
+  1996-05-26 Altered internal calling structure; version not deployed.
+  1996-05-17 Expanded tags with argument options. 
+  1996-05-10 Changed interface and added tags. 
+  1996-04-14 Insert simple values from flat hash into string. -Simon
+
+
+=head1 This is Free Software
+
+Copyright 1996, 1997, 1998 Evolution Online Systems, Inc. (http://www.evolution.com)
+
+You can use this software under the same terms as Perl itself.
+
+Part of the EvoScript Web Application Framework (http://www.evoscript.com)
+
+=cut

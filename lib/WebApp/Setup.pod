@@ -1,0 +1,36 @@
+=head1 WebApp Setup
+
+An introduction and tutorial covering use of the WebApp Framework. 
+
+=head1 Getting the Files
+
+You'll need 
+
+=over 4
+
+=item Perl 5.003 or later
+
+=item The WebApp libraries
+
+Available from http://www.evoscript.com/. 
+
+=item A WebApp script
+
+Available from http://www.evoscript.com/. 
+
+=back 
+
+=head1 Configuring 
+
+
+
+=head1 Copyright
+
+Copyright 1996, 1997, 1998 Evolution Online Systems, Inc. 
+Contact us at info@evolution.com or through http://www.evolution.com/.
+
+You may use this document for free under the terms of the Artistic License.
+
+The latest version of this and other portions of the EvoScript web application framework is available from http://www.evoscript.com/.
+
+=cut

@@ -1,0 +1,315 @@
+### Field::File.pm
+  # a field associating files with database records
+
+### Copyright 1997 Evolution Online Systems, Inc.
+  # Simon    M. Simon Cavalletto (simonm@evolution.com)
+  # Jeremy   Jeremy G. Bishop    (jeremy@evolution.com)
+
+### Change History
+  # 1998-03-23 Minimal subfield fixes.
+  # 1998-03-23 Added ensure_is_dir to temp_path.
+  # 1998-03-18 Fixed error in cleanup.
+  # 1998-02-24 Fixed "undefined value as a HASH reference" bug in cleanup().
+  # 1998-02-23 Provided default base directory.
+  # 1998-02-22 Added support for relative path names. -Simon
+  # 1997-12-17 Moved to v4 library, now package with File::Name code
+
+package Field::File;
+
+$VERSION = 4.00_03;
+use Field;
+push @ISA, qw( Field );
+
+Field::File->add_subclass_by_name( 'file' );
+
+use File::Name qw( filename current_directory );
+use Number::Bytes;
+use Text::PropertyList qw( astext );
+use Data::DRef;
+use Err::Debug;
+use Carp;
+
+use vars qw( $base_directory );
+$base_directory ||= File::Name->current;
+
+# $field->init()
+sub init {
+  my $field = shift;
+  
+  $field->{'path'} = File::Name->new( $field->{'path'} );
+  
+  $field->{'path'} = $base_directory->relative( $field->{'path'} ) 
+  					unless $field->{'path'}->is_absolute;
+  
+  debug 'fileattachments', 'File attachment directory for ', $field->title, 
+	 	  'is', $field->{'path'}->path ;
+  
+  warn 'File attachment directory for '. $field->title. 'field doesn\'t' . 
+  		' exist at'. $field->{'path'}->path . "\n"
+   				unless ($field->{'path'}->exists);
+  
+  return;
+}
+
+sub next_option {
+  my($field, $path, $options) = @_;
+  
+  my $item = shift( @$path );
+  if ( $item eq 'name' or $item eq 'type' or $item eq 'size' ) {
+    $options->{'display_element'} = $item;
+  } else {
+    unshift( @$path, $item );
+    $field->SUPER::next_option( $path, $options ); 
+  }
+  return;
+}
+
+# $html = $field->title($record, %options);
+sub title {
+  my ($field, $record, %options) = @_;
+  if ( $options{'display_element'} ) {
+    return "\u$options{'display_element'}";
+  }
+  return $field->SUPER::title( %options );
+}
+
+# $text = $field->readable( $record, %options );
+sub readable {
+  my ( $field, $record, %options ) = @_;
+  
+  my $method = $options{'display_element'} || 'name';
+  if ( $method eq 'type' ) { $method = 'media_type'; }
+  my $text = join( ', ', map($_->$method(), $field->files($record)) );
+  $text = Number::Bytes::byte_format( $text ) if ($method eq 'size');
+  $text ||= 'unknown' if ($method eq 'media_type');
+  $text ||= 'no file' . ($field->single() ? '' : 's') if ($method eq 'name');
+  return $text;
+}
+
+# $html = $field->display( $record, %options );
+sub display {
+  my ( $field, $record, %options ) = @_;
+  # warn "The field:\n" . astext( $field );
+  my $url = $record->datastore->self_url()
+	  . '/' . 'download'
+	  . '/' . $record->value('id')
+	  . '/' . $field->name() . '/';
+  my @links = map {
+    Script::HTML::Link::Anchor->new( { 'href'=>$url.$_->name }, $_->name
+    )->interpret();
+  } $field->files( $record );
+  return join('<br>', @links) || ($field->single() ? 'no file' : 'no files');
+}
+
+# $form = $field->edit( $record, %options ); 
+sub edit {
+  my ( $field, $record, %options ) = @_;
+  my $value = $field->value( $record );
+  my $prefix = ( $options{'prefix'} ? joindref( $options{'prefix'}, $field->name() ) : $field->name() );
+  my $form = '';
+  
+  # List of current files with checkbox remove controls
+  my @files;
+  if ( $field->temp_files( $record ) ) {
+    @files = $field->temp_files( $record );
+  } else {
+    @files = $field->files( $record );
+  }
+  
+  if ( scalar( @files ) ) {
+    my $file;
+    foreach $file (@files) {
+      $form .= $file->name()
+	    .  Script::HTML::Escape::nonbreakingspace()
+	    .  Script::HTML::Forms::Input->new({
+		  'type' => 'checkbox',
+		  'name' => joindref( $prefix, 'remove', $file->name() )
+		})->interpret()
+	    .  Script::HTML::Escape::nonbreakingspace()
+	    .  'Remove<br>';
+    } 
+  } else {
+    $form .= '<em>no file' .($field->single() ? 's' : ''). 'attached</em><br>';
+  }
+  
+  # File upload form element
+  $form .= 'Attach&nbsp;new&nbsp;file:&nbsp;';
+  $form .= Script::HTML::Forms::Input->new({
+    'type' => 'file',
+    'size' => '12,1',
+    'name' => joindref( $prefix, 'uploaded_file' )
+  })->interpret();
+  
+  # "More Files" button ( multiple file field only )
+  $form .= '&nbsp;<input type="submit" name="command" value="More Files">'
+    unless ( $field->single() );
+  
+  # Hidden Input for temp id of new records
+  $form .= Script::HTML::Forms::Input->new({
+    'type' => 'hidden',
+    'value' => $value->{'temp_id'},
+    'name' => joindref( $prefix, 'temp_id' ),
+    'size' => 12,
+  })->interpret() if ( exists($value->{'temp_id'}) );
+  
+  return $form;
+}
+
+# $field->update( $record, %$updates );
+sub update {
+  my( $field, $record, $updates ) = @_;
+  
+  $value = $field->value( $updates );
+  
+  # check to see if there is an uploaded file
+  my $uploaded_file = $value->{'uploaded_file'};
+  
+  # Handle uploaded file
+  if ( $uploaded_file and $uploaded_file->{'filename'} ){
+    
+    delete $value->{'uploaded_file'};
+    
+    # Remove current file or files ( single file field only );
+    if ( $field->single() ) {
+      my @files;
+      if ( $record->{'id'} eq 'new' ) {
+	@files = $field->temp_files( $record );
+      } else {
+	@files = $field->files( $record );
+      }
+      my $file; foreach $file (@files) { $file->delete(); }
+    }
+    
+    # Save new file in appropriate directory
+    my $path;
+    if ( $record->value('id') eq 'new' ) {
+      $path = $field->temp_path( $updates )
+    } else {
+      $path = $field->path( $record )
+    }
+    
+    # warn "The temp id is '$value->{'temp_id'}'";
+    
+    #!!!# file name tampering here for windoze filesystem
+    
+    $path->ensure_is_dir;
+    
+    my $file = $path->child( $uploaded_file->{'filename'} );
+    $file->set_contents( $uploaded_file->{'data'} );
+  }
+  
+  # pass remove list and temp id to $record
+  $record->{ $field->name() } = $value;
+  
+  return;
+}
+
+# $field->deleteprep($record)
+sub deleteprep {
+  my($field, $record) = @_;
+  # warn "$record in deleteprep:\n" . astext( $record );
+  # warn "\$path in deleteprep:\n" . astext( $field->path( $record ) );
+  foreach $file ( $field->files( $record ) ) { $file->delete() }
+  $field->path( $record )->delete;
+  return;
+}
+
+# $field->flatten($record);
+sub flatten {}
+
+# $field->cleanup($record);
+sub cleanup {
+  my ($field, $record) = @_;
+  my $path = $field->path( $record );
+  # warn "\$record in cleanup:\n" . astext( $record );
+  if ( $field->temp_files($record) ) {
+    $field->path( $record )->move_to_dir( $field->temp_files($record) );
+    $field->temp_path( $record )->delete();
+  }
+  my $removes = ( $field->value($record) || {} )->{'remove'} || {};
+  foreach $file ( $field->files( $record ) ) {
+    $file->delete() if $removes->{ $file->name() };
+  }
+  return();
+}
+
+# $field->create_datasource()
+sub create_datasource {
+  my $field = shift;
+  my $path = $field->{'path'};
+  $path->ensure_is_dir;
+  $path->child('new')->ensure_is_dir;
+  return;
+}
+
+# $field->destroy_datasource()
+sub destroy_datasource {
+  my $field = shift;
+  my $path = $field->{'path'};
+  $path->delete() if ( $path->exists() );
+  return;
+}
+
+### FILE FIELD METHODS
+
+# $path = $field->path( $record );
+sub path {
+  my($field, $record) = @_;
+  my $id = $record->{'id'};
+  # warn "The record:\n" . astext($record);
+  confess "No \$record->{'id'} for \$field->path()" unless( $id and $id ne 'new' );
+  return $field->{'path'}->child( $id );
+}
+
+# @files = $field->files( $record );
+sub files {
+  my( $field, $record ) = @_;
+  
+  return () unless $record;
+  return () if ( $record->value('id') eq 'new' );
+  
+  my $path = $field->path( $record ) ;
+  return () unless $path->exists();
+  
+  my @files = $path->children();
+  return wantarray ? @files : scalar( @files ); 
+}
+
+# $id = $field->temp_id( $record );
+sub temp_id {
+  my($field, $record) = @_;
+  my $value = $field->value( $record );
+  $value->{'temp_id'} = time() unless $value->{'temp_id'};
+  return $value->{'temp_id'};
+}
+
+# $path = $field->temp_path( $record );
+sub temp_path {
+  my($field, $record) = @_;
+  my $id = $field->temp_id( $record );
+  $field->{'path'}->child('new')->ensure_is_dir;
+  $field->{'path'}->child('new')->child( $id )->ensure_is_dir;
+  return $field->{'path'}->child('new')->child( $id );
+}
+
+# @files = $field->temp_files( $record )
+sub temp_files {
+  my($field, $record) = @_;
+  my $value = $field->value( $record );
+  return unless ( $value and ref($value) and $value->{'temp_id'} );
+  my @files = $field->temp_path( $record )->children();
+  return wantarray ? @files : scalar( @files ); 
+}
+
+# $fn = $field->file_from_id_and_name( $id, $name );
+sub file_from_id_and_name {
+  my( $field, $id, $name ) = @_;
+  my $path = $field->path({'id' => $id});
+  my $fn = $path->child( $name );
+  return ( $fn->exists ? $fn : undef );
+}
+
+# 0|1 = $field->single()
+sub single { return ( $_[0]->{'single_file'} ? 1 : 0 ) }
+
+1;

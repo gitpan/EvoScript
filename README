@@ -1,0 +1,99 @@
+README - EvoScript v4.00 b1_01 - Wednesday July 1, 1998
+
+Requirements:
+
+  The following third-party libraries sre required for EvoScript to function. 
+  Current versions should be available for downloadable from CPAN 
+  (http://cpan.perl.org), but for convenience, copies of these libraries are
+  also included in this distribution.
+
+    Class::MethodMaker
+    Ref
+    Time::JulianDay
+    Time::ParseDate
+    URI::Heuristic
+
+  Relational database support requires one or more of the following libraries
+  which are not included in this distribution. Support for additional database 
+  interfaces through the DBI system is anticipated in an upcomming release.
+
+    Mysql
+    Win32::ODBC
+
+Manifest:
+
+  EvoScript.cgi
+
+    The core EvoScript executable, configured for use with CGI. 
+
+  EvoScript_Included.cgi
+
+    The EvoScript executable combined with all of the required Perl modules
+    into a single, 13,000 line executable. If you're looking for a simple
+    installation choice, this might be it -- all you need is Perl 5.003
+    or later and a directory to hold your scripted page files.
+
+  EvoScript_DB.cgi
+
+    The EvoScript executable with additional modules that provide an OOP
+    database interface. Supports tab-delimited text files and supports
+    MySQL and Win32::ODBC, if these are installed/available in your Perl.
+
+  docs/
+
+    HTML and text versions available at http://www.evoscript.org
+
+    EvoDoc.pod
+  
+      This document is nessecary reading for any evoscript user. It contains
+      instructions for installation, configuration and EvoScript authoring.
+  
+    Tags.pod
+  
+      Definitions of all the basic EvoScript tags.
+  
+    Catalogue.pod
+  
+      A list of all of the top level packages in the EvoScript supporting
+      libraries.
+
+  examples/
+
+    test.page
+
+      A simple script to test installation.
+
+    people.peage
+
+      A sample script showing how perl and evoscript can be combined to write
+      little applications.
+
+  lib/
+  
+    The EvoScript supporting libraries. POD is embedded in each library file
+    for more detailed explanation.
+
+  cpan-libs/
+  
+    Third-party libraries that are not in the core distribution and are used by 
+    the EvoScript framework.   
+
+Installation:
+
+  See docs/EvoDoc.pod
+
+Release Notes:
+
+  The documentation in this release is incomplete.
+  For example, much of EvoScript's database wrapping functionality remains
+  undocumented. This documentation is in the works and should be available
+  sometime soon. So if you've downoladed this release, be sure to check the web
+  site in a few weeks for the new documentation and sample record resources.
+
+  The package names may be modified to better conform to CPAN convention after
+  this release.
+
+--
+Copyright 1998 Evolution Online Systems
+Jeremy Bishop <jeremy@evolution.com>
+The most recent version of EvoScript is available at http://www.evoscript.org

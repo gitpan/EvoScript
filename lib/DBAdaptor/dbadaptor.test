@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+use lib '/opt/perl/lib/Evo';
+
+use Text::PropertyList;
+
+use DBAdaptor::MySQL;
+my $sqldba = DBAdaptor::MySQL->new( 'sparc.urbanmotors.com:intranetics','staff' );
+
+print '- my sqldb: ' . astext( $sqldba );
+
+use Data::Criteria;
+my $crit =  new_group_from_values(  'department isequal 2',
+				    'name_last isstring Sanchez' );
+
+print '- rows: ' . astext( [ $sqldba->fetch( $crit ) ] ) . "\n";
+
+print "\n-done-\n";
